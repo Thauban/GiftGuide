@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiftGuide ER-Modell</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #1d2733;
+      --muted: #657384;
+      --blue: #1f4e79;
+      --blue-2: #2f75b5;
+      --line: #8da3b8;
+      --pk: #0b5cad;
+      --fk: #a15c00;
+      --unique: #59636f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    header {
+      padding: 8px 18px 6px;
+      background: var(--panel);
+      border-bottom: 1px solid #d6e0ea;
+      z-index: 3;
+    }
+
+    h1 {
+      margin: 0 0 2px;
+      color: var(--blue);
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 18px;
+      background: #eef4fa;
+      border-bottom: 1px solid #d6e0ea;
+      z-index: 2;
+    }
+
+    button {
+      border: 1px solid #b8c8d8;
+      background: white;
+      color: var(--blue);
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f7fbff;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .canvas-wrap {
+      height: calc(100vh - 77px);
+      overflow: hidden;
+      padding: 0;
+      position: relative;
+      background:
+        linear-gradient(90deg, rgba(31, 78, 121, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(31, 78, 121, 0.05) 1px, transparent 1px);
+      background-size: 28px 28px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .canvas-wrap.dragging {
+      cursor: grabbing;
+    }
+
+    svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: white;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      width: 2200px;
+      height: 1860px;
+      transform-origin: top left;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .section-label {
+      font-size: 25px;
+      font-weight: 700;
+      fill: var(--blue);
+    }
+
+    .entity rect.outer {
+      fill: #fbfdff;
+      stroke: var(--blue);
+      stroke-width: 2;
+      rx: 8;
+    }
+
+    .entity rect.head {
+      fill: var(--blue);
+      rx: 8;
+    }
+
+    .entity text.title {
+      fill: #fff;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .entity text.attr {
+      fill: var(--ink);
+      font-size: 14px;
+    }
+
+    .entity text.type {
+      fill: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pk {
+      fill: var(--pk);
+    }
+
+    .fk {
+      fill: var(--fk);
+    }
+
+    .unique {
+      fill: var(--unique);
+    }
+
+    .relationship {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 2.2;
+    }
+
+    .relationship-label {
+      fill: #2a3440;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .legend {
+      fill: #ffffff;
+      stroke: #c5d3e1;
+      stroke-width: 1.5;
+      rx: 8;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GiftGuide ER-Modell</h1>
+    <p class="subtitle">Alle Tabellen, Attribute, PK/FK-Markierungen und Beziehungen auf einer großen Übersicht.</p>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" onclick="fitToScreen()">Alles anzeigen</button>
+    <button type="button" onclick="zoomIn()">Zoom +</button>
+    <button type="button" onclick="zoomOut()">Zoom -</button>
+    <button type="button" onclick="resetZoom()">Zurücksetzen</button>
+    <span class="hint">Tipp: Mit gedrückter Maus ziehen. Mausrad zoomt direkt am Mauszeiger.</span>
+    <span id="zoomStatus" class="status">Zoom 100%</span>
+  </div>
+
+  <main id="canvasWrap" class="canvas-wrap">
+    <svg id="diagram" viewBox="0 0 2200 1860" role="img" aria-label="GiftGuide ER-Modell">
+      <defs>
+        <marker id="dot" markerWidth="8" markerHeight="8" refX="4" refY="4">
+          <circle cx="4" cy="4" r="3" fill="#ffffff" stroke="#2f75b5" stroke-width="1.5"></circle>
+        </marker>
+      </defs>
+
+      <text x="40" y="60" class="section-label">Stammdaten</text>
+      <text x="40" y="520" class="section-label">Fragebogen</text>
+      <text x="1180" y="520" class="section-label">Produkte und Empfehlungen</text>
+      <text x="1180" y="1060" class="section-label">Nutzeraktionen und Verkäufe</text>
+      <text x="40" y="1460" class="section-label">Erinnerungen</text>
+
+      <g id="relationships"></g>
+      <g id="entities"></g>
+
+      <rect x="1810" y="40" width="320" height="120" class="legend"></rect>
+      <text x="1830" y="72" font-size="18" font-weight="700" fill="#1f4e79">Legende</text>
+      <text x="1830" y="104" font-size="15" font-weight="700" fill="#0b5cad">PK = Primärschlüssel</text>
+      <text x="1830" y="130" font-size="15" font-weight="700" fill="#a15c00">FK = Fremdschlüssel</text>
+      <text x="1830" y="156" font-size="15" fill="#59636f">UNIQUE = eindeutiger Wert</text>
+    </svg>
+  </main>
+
+  <script>
+    const entities = {
+      role: {
+        x: 70, y: 110, w: 300,
+        attrs: [
+          ["PK", "role_id", "INTEGER"],
+          ["UNIQUE", "role_name", "TEXT"]
+        ]
+      },
+      app_user: {
+        x: 520, y: 90, w: 360,
+        attrs: [
+          ["PK", "user_id", "INTEGER"],
+          ["FK", "role_id", "INTEGER"],
+          ["", "username", "TEXT"],
+          ["UNIQUE", "email", "TEXT"],
+          ["", "password_hash", "TEXT"],
+          ["", "preferred_language", "TEXT"],
+          ["", "created_at", "TIMESTAMP"],
+          ["", "is_guest", "BOOLEAN"]
+        ]
+      },
+      partner_shop: {
+        x: 1060, y: 110, w: 350,
+        attrs: [
+          ["PK", "partner_shop_id", "INTEGER"],
+          ["FK", "role_id", "INTEGER"],
+          ["UNIQUE", "shop_name", "TEXT"],
+          ["", "website_url", "TEXT"],
+          ["", "commission_rate", "NUMERIC"]
+        ]
+      },
+      question: {
+        x: 70, y: 580, w: 360,
+        attrs: [
+          ["PK", "question_id", "INTEGER"],
+          ["", "question_text", "TEXT"],
+          ["", "question_type", "TEXT"],
+          ["", "display_order", "INTEGER"],
+          ["", "is_active", "BOOLEAN"]
+        ]
+      },
+      question_option: {
+        x: 530, y: 560, w: 390,
+        attrs: [
+          ["PK", "question_option_id", "INTEGER"],
+          ["FK", "question_id", "INTEGER"],
+          ["", "option_text", "TEXT"],
+          ["", "option_value", "TEXT"],
+          ["", "sort_order", "INTEGER"]
+        ]
+      },
+      question_rule: {
+        x: 70, y: 890, w: 390,
+        attrs: [
+          ["PK", "question_rule_id", "INTEGER"],
+          ["FK", "question_id", "INTEGER"],
+          ["FK", "question_option_id", "INTEGER"],
+          ["FK", "next_question_id", "INTEGER"],
+          ["", "condition_value", "TEXT"]
+        ]
+      },
+      questionnaire_session: {
+        x: 520, y: 880, w: 430,
+        attrs: [
+          ["PK", "questionnaire_session_id", "INTEGER"],
+          ["FK", "user_id", "INTEGER"],
+          ["", "started_at", "TIMESTAMP"],
+          ["", "completed_at", "TIMESTAMP"],
+          ["", "status", "TEXT"]
+        ]
+      },
+      question_answer: {
+        x: 70, y: 1170, w: 430,
+        attrs: [
+          ["PK", "question_answer_id", "INTEGER"],
+          ["FK", "questionnaire_session_id", "INTEGER"],
+          ["FK", "question_id", "INTEGER"],
+          ["FK", "question_option_id", "INTEGER"],
+          ["", "answer_text", "TEXT"],
+          ["", "answer_number", "NUMERIC"]
+        ]
+      },
+      product_category: {
+        x: 1180, y: 580, w: 380,
+        attrs: [
+          ["PK", "product_category_id", "INTEGER"],
+          ["UNIQUE", "category_name", "TEXT"]
+        ]
+      },
+      product: {
+        x: 1700, y: 520, w: 410,
+        attrs: [
+          ["PK", "product_id", "INTEGER"],
+          ["FK", "product_category_id", "INTEGER"],
+          ["FK", "partner_shop_id", "INTEGER"],
+          ["", "external_product_id", "TEXT"],
+          ["", "product_name", "TEXT"],
+          ["", "description", "TEXT"],
+          ["", "price", "NUMERIC"],
+          ["", "image_url", "TEXT"],
+          ["", "availability", "TEXT"],
+          ["", "affiliate_link", "TEXT"],
+          ["", "last_checked_at", "TIMESTAMP"]
+        ]
+      },
+      recommendation: {
+        x: 1180, y: 830, w: 430,
+        attrs: [
+          ["PK", "recommendation_id", "INTEGER"],
+          ["FK", "questionnaire_session_id", "INTEGER"],
+          ["FK", "product_id", "INTEGER"],
+          ["", "reason_text", "TEXT"],
+          ["", "score", "NUMERIC"],
+          ["", "rank_position", "INTEGER"],
+          ["", "created_at", "TIMESTAMP"]
+        ]
+      },
+      favorite: {
+        x: 1180, y: 1120, w: 340,
+        attrs: [
+          ["PK", "favorite_id", "INTEGER"],
+          ["FK", "user_id", "INTEGER"],
+          ["FK", "product_id", "INTEGER"],
+          ["", "created_at", "TIMESTAMP"]
+        ]
+      },
+      reminder: {
+        x: 70, y: 1490, w: 360,
+        attrs: [
+          ["PK", "reminder_id", "INTEGER"],
+          ["FK", "user_id", "INTEGER"],
+          ["", "title", "TEXT"],
+          ["", "reminder_date", "TIMESTAMP"],
+          ["", "occasion", "TEXT"],
+          ["", "is_done", "BOOLEAN"],
+          ["", "created_at", "TIMESTAMP"]
+        ]
+      },
+      affiliate_sale: {
+        x: 1700, y: 1080, w: 410,
+        attrs: [
+          ["PK", "affiliate_sale_id", "INTEGER"],
+          ["FK", "user_id", "INTEGER"],
+          ["FK", "partner_shop_id", "INTEGER"],
+          ["FK", "product_id", "INTEGER"],
+          ["FK", "product_category_id", "INTEGER"],
+          ["", "sale_date", "TIMESTAMP"],
+          ["", "sale_amount", "NUMERIC"],
+          ["", "commission_amount", "NUMERIC"],
+          ["", "status", "TEXT"]
+        ]
+      }
+    };
+
+    const relationships = [
+      ["role", "app_user", "1:n besitzt"],
+      ["role", "partner_shop", "1:n besitzt"],
+      ["app_user", "questionnaire_session", "1:n startet"],
+      ["question", "question_option", "1:n enthält"],
+      ["question", "question_rule", "1:n steuert / nächste Frage"],
+      ["question_option", "question_rule", "1:n löst aus"],
+      ["questionnaire_session", "question_answer", "1:n enthält"],
+      ["question", "question_answer", "1:n wird beantwortet"],
+      ["question_option", "question_answer", "1:n wird ausgewählt"],
+      ["questionnaire_session", "recommendation", "1:n erzeugt"],
+      ["product", "recommendation", "1:n wird empfohlen"],
+      ["product_category", "product", "1:n gruppiert"],
+      ["partner_shop", "product", "1:n bietet an"],
+      ["app_user", "favorite", "1:n speichert"],
+      ["product", "favorite", "1:n wird gemerkt"],
+      ["app_user", "reminder", "1:n erstellt"],
+      ["app_user", "affiliate_sale", "1:n verursacht"],
+      ["product", "affiliate_sale", "1:n wird verkauft"],
+      ["partner_shop", "affiliate_sale", "1:n erhält Sale"],
+      ["product_category", "affiliate_sale", "1:n wird ausgewertet"]
+    ];
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const entityLayer = document.getElementById("entities");
+    const relationshipLayer = document.getElementById("relationships");
+
+    function entityHeight(entity) {
+      return 46 + entity.attrs.length * 26 + 14;
+    }
+
+    function center(entity) {
+      return {
+        x: entity.x + entity.w / 2,
+        y: entity.y + entityHeight(entity) / 2
+      };
+    }
+
+    function createSvgElement(name, attrs = {}) {
+      const el = document.createElementNS(svgNS, name);
+      for (const [key, value] of Object.entries(attrs)) {
+        el.setAttribute(key, value);
+      }
+      return el;
+    }
+
+    function drawEntity(name, entity) {
+      const group = createSvgElement("g", { class: "entity" });
+      const h = entityHeight(entity);
+
+      group.appendChild(createSvgElement("rect", {
+        x: entity.x,
+        y: entity.y,
+        width: entity.w,
+        height: h,
+        class: "outer"
+      }));
+
+      group.appendChild(createSvgElement("rect", {
+        x: entity.x,
+        y: entity.y,
+        width: entity.w,
+        height: 42,
+        class: "head"
+      }));
+
+      const title = createSvgElement("text", {
+        x: entity.x + 14,
+        y: entity.y + 27,
+        class: "title"
+      });
+      title.textContent = name;
+      group.appendChild(title);
+
+      let y = entity.y + 70;
+      entity.attrs.forEach(([key, attr, type]) => {
+        let attrX = entity.x + 14;
+        if (key) {
+          const tag = createSvgElement("text", {
+            x: entity.x + 14,
+            y,
+            class: `tag ${key.toLowerCase()}`
+          });
+          tag.textContent = key;
+          group.appendChild(tag);
+          attrX = entity.x + 76;
+        }
+
+        const attrText = createSvgElement("text", {
+          x: attrX,
+          y,
+          class: "attr"
+        });
+        attrText.textContent = attr;
+        group.appendChild(attrText);
+
+        const typeText = createSvgElement("text", {
+          x: entity.x + entity.w - 125,
+          y,
+          class: "type"
+        });
+        typeText.textContent = type;
+        group.appendChild(typeText);
+
+        y += 26;
+      });
+
+      entityLayer.appendChild(group);
+    }
+
+    function drawRelationship(fromName, toName, label) {
+      const from = center(entities[fromName]);
+      const to = center(entities[toName]);
+      const mx = (from.x + to.x) / 2;
+      const path = createSvgElement("path", {
+        d: `M ${from.x} ${from.y} C ${mx} ${from.y}, ${mx} ${to.y}, ${to.x} ${to.y}`,
+        class: "relationship",
+        "marker-start": "url(#dot)",
+        "marker-end": "url(#dot)"
+      });
+      relationshipLayer.appendChild(path);
+
+      const text = createSvgElement("text", {
+        x: mx + 8,
+        y: (from.y + to.y) / 2 - 8,
+        class: "relationship-label"
+      });
+      text.textContent = label;
+      relationshipLayer.appendChild(text);
+    }
+
+    relationships.forEach(([from, to, label]) => drawRelationship(from, to, label));
+    Object.entries(entities).forEach(([name, entity]) => drawEntity(name, entity));
+
+    let scale = 1;
+    let panX = 24;
+    let panY = 24;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragOriginX = 0;
+    let dragOriginY = 0;
+
+    const diagram = document.getElementById("diagram");
+    const canvasWrap = document.getElementById("canvasWrap");
+    const zoomStatus = document.getElementById("zoomStatus");
+
+    function applyZoom() {
+      diagram.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      zoomStatus.textContent = `Zoom ${Math.round(scale * 100)}%`;
+    }
+
+    function zoomIn() {
+      zoomAtCenter(1.07);
+    }
+
+    function zoomOut() {
+      zoomAtCenter(1 / 1.07);
+    }
+
+    function zoomAtCenter(factor) {
+      const rect = canvasWrap.getBoundingClientRect();
+      zoomAt(rect.width / 2, rect.height / 2, factor);
+    }
+
+    function zoomAt(x, y, factor) {
+      const previousScale = scale;
+      const nextScale = Math.max(0.28, Math.min(1.8, scale * factor));
+      const diagramX = (x - panX) / previousScale;
+      const diagramY = (y - panY) / previousScale;
+      scale = nextScale;
+      panX = x - diagramX * scale;
+      panY = y - diagramY * scale;
+      applyZoom();
+    }
+
+    function fitToScreen() {
+      const rect = canvasWrap.getBoundingClientRect();
+      const padding = 6;
+      const scaleX = (rect.width - padding * 2) / 2200;
+      const scaleY = (rect.height - padding * 2) / 1860;
+      scale = Math.max(0.28, Math.min(scaleX, scaleY));
+      panX = (rect.width - 2200 * scale) / 2;
+      panY = (rect.height - 1860 * scale) / 2;
+      applyZoom();
+    }
+
+    function resetZoom() {
+      scale = 1;
+      panX = 24;
+      panY = 24;
+      applyZoom();
+    }
+
+    canvasWrap.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const rect = canvasWrap.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      zoomAt(x, y, event.deltaY < 0 ? 1.035 : 1 / 1.035);
+    }, { passive: false });
+
+    canvasWrap.addEventListener("mousedown", (event) => {
+      isDragging = true;
+      canvasWrap.classList.add("dragging");
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      dragOriginX = panX;
+      dragOriginY = panY;
+    });
+
+    window.addEventListener("mousemove", (event) => {
+      if (!isDragging) return;
+      panX = dragOriginX + event.clientX - dragStartX;
+      panY = dragOriginY + event.clientY - dragStartY;
+      applyZoom();
+    });
+
+    window.addEventListener("mouseup", () => {
+      isDragging = false;
+      canvasWrap.classList.remove("dragging");
+    });
+
+    window.addEventListener("resize", fitToScreen);
+    fitToScreen();
+  </script>
+</body>
+</html>

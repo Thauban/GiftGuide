@@ -1,0 +1,12 @@
+# Lokal erzeugte Datenbanken sollen nicht ins Git-Repository.
+giftguide.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Python-Zwischendateien.
+__pycache__/
+
+# Temporäre Ordner aus der PDF-/Browser-Prüfung.
+_chrome_profile/
+_pdf_preview/

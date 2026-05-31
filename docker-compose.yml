@@ -1,0 +1,43 @@
+services:
+  # PostgreSQL ist die eigentliche relationale Datenbank für GiftGuide.
+  postgres:
+    # Version 16 ist stabil, aktuell und für ein Hochschulprojekt gut geeignet.
+    image: postgres:16
+    container_name: giftguide-postgres
+
+    # Der Container startet automatisch wieder, außer er wurde bewusst gestoppt.
+    restart: unless-stopped
+
+    # Diese Werte legen Datenbankname, Benutzer und Passwort beim ersten Start an.
+    environment:
+      POSTGRES_DB: giftguide
+      POSTGRES_USER: giftguide
+      POSTGRES_PASSWORD: giftguide
+
+    # Port 5432 macht PostgreSQL auf dem eigenen Rechner erreichbar.
+    ports:
+      - "5432:5432"
+
+    # Das erste Volume speichert echte Daten dauerhaft.
+    # Das zweite Volume lädt Schema und Beispieldaten beim ersten Start in PostgreSQL.
+    volumes:
+      - giftguide_postgres_data:/var/lib/postgresql/data
+      - ./db/postgres:/docker-entrypoint-initdb.d:ro
+
+  # Adminer ist die sichtbare Web-Oberfläche, um Tabellen und Inhalte anzuschauen.
+  adminer:
+    image: adminer:4
+    container_name: giftguide-adminer
+    restart: unless-stopped
+
+    # Adminer soll erst starten, wenn PostgreSQL gestartet wurde.
+    depends_on:
+      - postgres
+
+    # Adminer ist im Browser unter http://localhost:8080 erreichbar.
+    ports:
+      - "8080:8080"
+
+volumes:
+  # Benanntes Docker-Volume für persistente PostgreSQL-Daten.
+  giftguide_postgres_data:
