@@ -33,58 +33,28 @@
     }
 
     header {
-      padding: 8px 18px 6px;
+      padding: 14px 24px 12px;
       background: var(--panel);
       border-bottom: 1px solid #d6e0ea;
-      z-index: 3;
     }
 
     h1 {
-      margin: 0 0 2px;
+      margin: 0 0 4px;
       color: var(--blue);
-      font-size: 22px;
+      font-size: 30px;
+      line-height: 1.15;
       letter-spacing: 0;
     }
 
     .subtitle {
       margin: 0;
       color: var(--muted);
-      font-size: 12px;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 6px 18px;
-      background: #eef4fa;
-      border-bottom: 1px solid #d6e0ea;
-      z-index: 2;
-    }
-
-    button {
-      border: 1px solid #b8c8d8;
-      background: white;
-      color: var(--blue);
-      border-radius: 5px;
-      padding: 6px 10px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #f7fbff;
-    }
-
-    .hint {
-      color: var(--muted);
-      font-size: 12px;
-      margin-left: 8px;
+      font-size: 14px;
     }
 
     .canvas-wrap {
-      height: calc(100vh - 77px);
+      width: 100vw;
+      height: calc(100vh - 82px);
       overflow: hidden;
       padding: 0;
       position: relative;
@@ -94,6 +64,7 @@
       background-size: 28px 28px;
       cursor: grab;
       user-select: none;
+      touch-action: none;
     }
 
     .canvas-wrap.dragging {
@@ -111,13 +82,6 @@
       width: 2200px;
       height: 1860px;
       transform-origin: top left;
-    }
-
-    .status {
-      margin-left: auto;
-      color: var(--muted);
-      font-size: 13px;
-      white-space: nowrap;
     }
 
     .section-label {
@@ -194,17 +158,8 @@
 <body>
   <header>
     <h1>GiftGuide ER-Modell</h1>
-    <p class="subtitle">Alle Tabellen, Attribute, PK/FK-Markierungen und Beziehungen auf einer großen Übersicht.</p>
+    <p class="subtitle">Alle Tabellen, Attribute, PK/FK-Markierungen und Beziehungen.</p>
   </header>
-
-  <div class="toolbar">
-    <button type="button" onclick="fitToScreen()">Alles anzeigen</button>
-    <button type="button" onclick="zoomIn()">Zoom +</button>
-    <button type="button" onclick="zoomOut()">Zoom -</button>
-    <button type="button" onclick="resetZoom()">Zurücksetzen</button>
-    <span class="hint">Tipp: Mit gedrückter Maus ziehen. Mausrad zoomt direkt am Mauszeiger.</span>
-    <span id="zoomStatus" class="status">Zoom 100%</span>
-  </div>
 
   <main id="canvasWrap" class="canvas-wrap">
     <svg id="diagram" viewBox="0 0 2200 1860" role="img" aria-label="GiftGuide ER-Modell">
@@ -523,32 +478,21 @@
     let scale = 1;
     let panX = 24;
     let panY = 24;
-    let isDragging = false;
+    const pointers = new Map();
     let dragStartX = 0;
     let dragStartY = 0;
     let dragOriginX = 0;
     let dragOriginY = 0;
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
+    let pinchCenterX = 0;
+    let pinchCenterY = 0;
 
     const diagram = document.getElementById("diagram");
     const canvasWrap = document.getElementById("canvasWrap");
-    const zoomStatus = document.getElementById("zoomStatus");
 
     function applyZoom() {
       diagram.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-      zoomStatus.textContent = `Zoom ${Math.round(scale * 100)}%`;
-    }
-
-    function zoomIn() {
-      zoomAtCenter(1.07);
-    }
-
-    function zoomOut() {
-      zoomAtCenter(1 / 1.07);
-    }
-
-    function zoomAtCenter(factor) {
-      const rect = canvasWrap.getBoundingClientRect();
-      zoomAt(rect.width / 2, rect.height / 2, factor);
     }
 
     function zoomAt(x, y, factor) {
@@ -588,26 +532,76 @@
       zoomAt(x, y, event.deltaY < 0 ? 1.035 : 1 / 1.035);
     }, { passive: false });
 
-    canvasWrap.addEventListener("mousedown", (event) => {
-      isDragging = true;
+    function pointerDistance(a, b) {
+      return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    }
+
+    function pointerCenter(a, b) {
+      const rect = canvasWrap.getBoundingClientRect();
+      return {
+        x: (a.clientX + b.clientX) / 2 - rect.left,
+        y: (a.clientY + b.clientY) / 2 - rect.top
+      };
+    }
+
+    canvasWrap.addEventListener("pointerdown", (event) => {
+      canvasWrap.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, event);
       canvasWrap.classList.add("dragging");
-      dragStartX = event.clientX;
-      dragStartY = event.clientY;
-      dragOriginX = panX;
-      dragOriginY = panY;
+
+      if (pointers.size === 1) {
+        dragStartX = event.clientX;
+        dragStartY = event.clientY;
+        dragOriginX = panX;
+        dragOriginY = panY;
+      }
+
+      if (pointers.size === 2) {
+        const [first, second] = [...pointers.values()];
+        pinchStartDistance = pointerDistance(first, second);
+        pinchStartScale = scale;
+        const center = pointerCenter(first, second);
+        pinchCenterX = center.x;
+        pinchCenterY = center.y;
+      }
     });
 
-    window.addEventListener("mousemove", (event) => {
-      if (!isDragging) return;
-      panX = dragOriginX + event.clientX - dragStartX;
-      panY = dragOriginY + event.clientY - dragStartY;
-      applyZoom();
+    canvasWrap.addEventListener("pointermove", (event) => {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, event);
+
+      if (pointers.size === 1) {
+        panX = dragOriginX + event.clientX - dragStartX;
+        panY = dragOriginY + event.clientY - dragStartY;
+        applyZoom();
+      }
+
+      if (pointers.size === 2) {
+        const [first, second] = [...pointers.values()];
+        const distance = pointerDistance(first, second);
+        if (pinchStartDistance <= 0) return;
+        const nextScale = Math.max(0.28, Math.min(1.8, pinchStartScale * (distance / pinchStartDistance)));
+        zoomAt(pinchCenterX, pinchCenterY, nextScale / scale);
+      }
     });
 
-    window.addEventListener("mouseup", () => {
-      isDragging = false;
-      canvasWrap.classList.remove("dragging");
-    });
+    function endPointer(event) {
+      pointers.delete(event.pointerId);
+      if (pointers.size === 0) {
+        canvasWrap.classList.remove("dragging");
+      }
+      if (pointers.size === 1) {
+        const [remaining] = [...pointers.values()];
+        dragStartX = remaining.clientX;
+        dragStartY = remaining.clientY;
+        dragOriginX = panX;
+        dragOriginY = panY;
+      }
+    }
+
+    canvasWrap.addEventListener("pointerup", endPointer);
+    canvasWrap.addEventListener("pointercancel", endPointer);
+    canvasWrap.addEventListener("dblclick", fitToScreen);
 
     window.addEventListener("resize", fitToScreen);
     fitToScreen();
