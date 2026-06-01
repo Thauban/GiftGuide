@@ -517,13 +517,6 @@
       applyZoom();
     }
 
-    function resetZoom() {
-      scale = 1;
-      panX = 24;
-      panY = 24;
-      applyZoom();
-    }
-
     canvasWrap.addEventListener("wheel", (event) => {
       event.preventDefault();
       const rect = canvasWrap.getBoundingClientRect();
