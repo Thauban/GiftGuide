@@ -79,8 +79,8 @@
       border: 0;
       border-radius: 0;
       box-shadow: none;
-      width: 2200px;
-      height: 1860px;
+      width: 2600px;
+      height: 2200px;
       transform-origin: top left;
     }
 
@@ -137,13 +137,16 @@
 
     .relationship {
       fill: none;
-      stroke: var(--line);
-      stroke-width: 2.2;
+      stroke: #6f8fac;
+      stroke-width: 3.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 1;
     }
 
-    .relationship-label {
-      fill: #2a3440;
-      font-size: 14px;
+    .cardinality {
+      fill: #1f4e79;
+      font-size: 18px;
       font-weight: 700;
     }
 
@@ -162,41 +165,43 @@
   </header>
 
   <main id="canvasWrap" class="canvas-wrap">
-    <svg id="diagram" viewBox="0 0 2200 1860" role="img" aria-label="GiftGuide ER-Modell">
+    <svg id="diagram" viewBox="0 0 2600 2200" role="img" aria-label="GiftGuide ER-Modell">
       <defs>
-        <marker id="dot" markerWidth="8" markerHeight="8" refX="4" refY="4">
-          <circle cx="4" cy="4" r="3" fill="#ffffff" stroke="#2f75b5" stroke-width="1.5"></circle>
+        <marker id="dot" markerWidth="10" markerHeight="10" refX="5" refY="5">
+          <circle cx="5" cy="5" r="3.2" fill="#ffffff" stroke="#2f75b5" stroke-width="1.8"></circle>
         </marker>
       </defs>
 
-      <text x="40" y="60" class="section-label">Stammdaten</text>
-      <text x="40" y="520" class="section-label">Fragebogen</text>
-      <text x="1180" y="520" class="section-label">Produkte und Empfehlungen</text>
-      <text x="1180" y="1060" class="section-label">Nutzeraktionen und Verkäufe</text>
-      <text x="40" y="1460" class="section-label">Erinnerungen</text>
+      <text x="70" y="60" class="section-label">Stammdaten</text>
+      <text x="70" y="560" class="section-label">Fragebogen</text>
+      <text x="1320" y="500" class="section-label">Produkte und Empfehlungen</text>
+      <text x="1320" y="1260" class="section-label">Nutzeraktionen und Verkäufe</text>
+      <text x="600" y="1580" class="section-label">Erinnerungen</text>
 
-      <g id="relationships"></g>
+      <g id="relationshipLines"></g>
       <g id="entities"></g>
+      <g id="relationshipLabels"></g>
 
-      <rect x="1810" y="40" width="320" height="120" class="legend"></rect>
-      <text x="1830" y="72" font-size="18" font-weight="700" fill="#1f4e79">Legende</text>
-      <text x="1830" y="104" font-size="15" font-weight="700" fill="#0b5cad">PK = Primärschlüssel</text>
-      <text x="1830" y="130" font-size="15" font-weight="700" fill="#a15c00">FK = Fremdschlüssel</text>
-      <text x="1830" y="156" font-size="15" fill="#59636f">UNIQUE = eindeutiger Wert</text>
+      <rect x="2200" y="50" width="330" height="145" class="legend"></rect>
+      <text x="2220" y="82" font-size="18" font-weight="700" fill="#1f4e79">Legende</text>
+      <text x="2220" y="114" font-size="15" font-weight="700" fill="#0b5cad">PK = Primärschlüssel</text>
+      <text x="2220" y="140" font-size="15" font-weight="700" fill="#a15c00">FK = Fremdschlüssel</text>
+      <text x="2220" y="166" font-size="15" fill="#59636f">UNIQUE = eindeutiger Wert</text>
+      <text x="2220" y="190" font-size="15" fill="#1f4e79">Linie: 1:n Beziehung</text>
     </svg>
   </main>
 
   <script>
     const entities = {
       role: {
-        x: 70, y: 110, w: 300,
+        x: 70, y: 110, w: 320,
         attrs: [
           ["PK", "role_id", "INTEGER"],
           ["UNIQUE", "role_name", "TEXT"]
         ]
       },
       app_user: {
-        x: 520, y: 90, w: 360,
+        x: 600, y: 90, w: 390,
         attrs: [
           ["PK", "user_id", "INTEGER"],
           ["FK", "role_id", "INTEGER"],
@@ -209,7 +214,7 @@
         ]
       },
       partner_shop: {
-        x: 1060, y: 110, w: 350,
+        x: 1160, y: 110, w: 380,
         attrs: [
           ["PK", "partner_shop_id", "INTEGER"],
           ["FK", "role_id", "INTEGER"],
@@ -219,7 +224,7 @@
         ]
       },
       question: {
-        x: 70, y: 580, w: 360,
+        x: 70, y: 620, w: 390,
         attrs: [
           ["PK", "question_id", "INTEGER"],
           ["", "question_text", "TEXT"],
@@ -229,7 +234,7 @@
         ]
       },
       question_option: {
-        x: 530, y: 560, w: 390,
+        x: 620, y: 610, w: 430,
         attrs: [
           ["PK", "question_option_id", "INTEGER"],
           ["FK", "question_id", "INTEGER"],
@@ -239,7 +244,7 @@
         ]
       },
       question_rule: {
-        x: 70, y: 890, w: 390,
+        x: 70, y: 980, w: 430,
         attrs: [
           ["PK", "question_rule_id", "INTEGER"],
           ["FK", "question_id", "INTEGER"],
@@ -249,7 +254,7 @@
         ]
       },
       questionnaire_session: {
-        x: 520, y: 880, w: 430,
+        x: 620, y: 1010, w: 450,
         attrs: [
           ["PK", "questionnaire_session_id", "INTEGER"],
           ["FK", "user_id", "INTEGER"],
@@ -259,7 +264,7 @@
         ]
       },
       question_answer: {
-        x: 70, y: 1170, w: 430,
+        x: 70, y: 1370, w: 460,
         attrs: [
           ["PK", "question_answer_id", "INTEGER"],
           ["FK", "questionnaire_session_id", "INTEGER"],
@@ -270,14 +275,14 @@
         ]
       },
       product_category: {
-        x: 1180, y: 580, w: 380,
+        x: 1320, y: 560, w: 430,
         attrs: [
           ["PK", "product_category_id", "INTEGER"],
           ["UNIQUE", "category_name", "TEXT"]
         ]
       },
       product: {
-        x: 1700, y: 520, w: 410,
+        x: 2020, y: 520, w: 450,
         attrs: [
           ["PK", "product_id", "INTEGER"],
           ["FK", "product_category_id", "INTEGER"],
@@ -293,7 +298,7 @@
         ]
       },
       recommendation: {
-        x: 1180, y: 830, w: 430,
+        x: 1320, y: 920, w: 470,
         attrs: [
           ["PK", "recommendation_id", "INTEGER"],
           ["FK", "questionnaire_session_id", "INTEGER"],
@@ -305,7 +310,7 @@
         ]
       },
       favorite: {
-        x: 1180, y: 1120, w: 340,
+        x: 1320, y: 1360, w: 390,
         attrs: [
           ["PK", "favorite_id", "INTEGER"],
           ["FK", "user_id", "INTEGER"],
@@ -314,7 +319,7 @@
         ]
       },
       reminder: {
-        x: 70, y: 1490, w: 360,
+        x: 600, y: 1620, w: 390,
         attrs: [
           ["PK", "reminder_id", "INTEGER"],
           ["FK", "user_id", "INTEGER"],
@@ -326,7 +331,7 @@
         ]
       },
       affiliate_sale: {
-        x: 1700, y: 1080, w: 410,
+        x: 2020, y: 1320, w: 450,
         attrs: [
           ["PK", "affiliate_sale_id", "INTEGER"],
           ["FK", "user_id", "INTEGER"],
@@ -342,31 +347,32 @@
     };
 
     const relationships = [
-      ["role", "app_user", "1:n besitzt"],
-      ["role", "partner_shop", "1:n besitzt"],
-      ["app_user", "questionnaire_session", "1:n startet"],
-      ["question", "question_option", "1:n enthält"],
-      ["question", "question_rule", "1:n steuert / nächste Frage"],
-      ["question_option", "question_rule", "1:n löst aus"],
-      ["questionnaire_session", "question_answer", "1:n enthält"],
-      ["question", "question_answer", "1:n wird beantwortet"],
-      ["question_option", "question_answer", "1:n wird ausgewählt"],
-      ["questionnaire_session", "recommendation", "1:n erzeugt"],
-      ["product", "recommendation", "1:n wird empfohlen"],
-      ["product_category", "product", "1:n gruppiert"],
-      ["partner_shop", "product", "1:n bietet an"],
-      ["app_user", "favorite", "1:n speichert"],
-      ["product", "favorite", "1:n wird gemerkt"],
-      ["app_user", "reminder", "1:n erstellt"],
-      ["app_user", "affiliate_sale", "1:n verursacht"],
-      ["product", "affiliate_sale", "1:n wird verkauft"],
-      ["partner_shop", "affiliate_sale", "1:n erhält Sale"],
-      ["product_category", "affiliate_sale", "1:n wird ausgewertet"]
+      ["role", "app_user", "besitzt", { fromSide: "right", toSide: "left", fromOffset: -20, toOffset: -60 }],
+      ["role", "partner_shop", "besitzt", { fromSide: "top", toSide: "top", fromOffset: 90, toOffset: -90, via: [[230, 40], [1350, 40]] }],
+      ["app_user", "questionnaire_session", "startet", { fromSide: "bottom", toSide: "top", fromOffset: -60, toOffset: -80 }],
+      ["question", "question_option", "enthält", { fromSide: "right", toSide: "left", fromOffset: -25, toOffset: -20 }],
+      ["question", "question_rule", "steuert nächste Frage", { fromSide: "bottom", toSide: "top", fromOffset: -100, toOffset: -90 }],
+      ["question_option", "question_rule", "löst aus", { fromSide: "bottom", toSide: "right", fromOffset: -120, toOffset: -10, via: [[720, 930], [520, 930]] }],
+      ["questionnaire_session", "question_answer", "enthält", { fromSide: "left", toSide: "right", fromOffset: 40, toOffset: -20, via: [[540, 1160], [540, 1470]] }],
+      ["question", "question_answer", "wird beantwortet", { fromSide: "bottom", toSide: "top", fromOffset: 90, toOffset: -120, via: [[360, 1280], [180, 1280]] }],
+      ["question_option", "question_answer", "wird ausgewählt", { fromSide: "bottom", toSide: "top", fromOffset: 110, toOffset: 120, via: [[920, 1290], [380, 1290]] }],
+      ["questionnaire_session", "recommendation", "erzeugt", { fromSide: "right", toSide: "left", fromOffset: -40, toOffset: -70 }],
+      ["product", "recommendation", "wird empfohlen", { fromSide: "left", toSide: "right", fromOffset: 0, toOffset: -30, via: [[1880, 800], [1880, 1010]] }],
+      ["product_category", "product", "gruppiert", { fromSide: "right", toSide: "left", fromOffset: -25, toOffset: -100 }],
+      ["partner_shop", "product", "bietet an", { fromSide: "right", toSide: "top", fromOffset: 50, toOffset: -100, via: [[1800, 230], [1800, 520]] }],
+      ["app_user", "favorite", "speichert", { fromSide: "right", toSide: "left", fromOffset: 35, toOffset: -20, via: [[1120, 260], [1120, 1460]] }],
+      ["product", "favorite", "wird gemerkt", { fromSide: "left", toSide: "right", fromOffset: 120, toOffset: -20, via: [[1840, 940], [1840, 1460]] }],
+      ["app_user", "reminder", "erstellt", { fromSide: "bottom", toSide: "top", fromOffset: 90, toOffset: 0, via: [[925, 1540], [795, 1540]] }],
+      ["app_user", "affiliate_sale", "verursacht", { fromSide: "right", toSide: "left", fromOffset: 90, toOffset: -80, via: [[1100, 330], [1100, 1250], [1940, 1250]] }],
+      ["product", "affiliate_sale", "wird verkauft", { fromSide: "bottom", toSide: "top", fromOffset: 0, toOffset: 0 }],
+      ["partner_shop", "affiliate_sale", "erhält Sale", { fromSide: "bottom", toSide: "top", fromOffset: 120, toOffset: -120, via: [[1660, 360], [1660, 1240], [2140, 1240]] }],
+      ["product_category", "affiliate_sale", "wird ausgewertet", { fromSide: "bottom", toSide: "left", fromOffset: 80, toOffset: 80, via: [[1650, 820], [1650, 1570], [2020, 1570]] }]
     ];
 
     const svgNS = "http://www.w3.org/2000/svg";
     const entityLayer = document.getElementById("entities");
-    const relationshipLayer = document.getElementById("relationships");
+    const relationshipLineLayer = document.getElementById("relationshipLines");
+    const relationshipLabelLayer = document.getElementById("relationshipLabels");
 
     function entityHeight(entity) {
       return 46 + entity.attrs.length * 26 + 14;
@@ -377,6 +383,25 @@
         x: entity.x + entity.w / 2,
         y: entity.y + entityHeight(entity) / 2
       };
+    }
+
+    function anchor(entity, side, offset = 0) {
+      const h = entityHeight(entity);
+      const cx = entity.x + entity.w / 2;
+      const cy = entity.y + h / 2;
+
+      if (side === "right") return { x: entity.x + entity.w, y: cy + offset, side };
+      if (side === "left") return { x: entity.x, y: cy + offset, side };
+      if (side === "bottom") return { x: cx + offset, y: entity.y + h, side };
+      return { x: cx + offset, y: entity.y, side };
+    }
+
+    function cardinalityPosition(point, value) {
+      const distance = 20;
+      if (point.side === "right") return { x: point.x + distance, y: point.y - 8, anchor: "start", value };
+      if (point.side === "left") return { x: point.x - distance, y: point.y - 8, anchor: "end", value };
+      if (point.side === "bottom") return { x: point.x, y: point.y + distance, anchor: "middle", value };
+      return { x: point.x, y: point.y - distance, anchor: "middle", value };
     }
 
     function createSvgElement(name, attrs = {}) {
@@ -451,28 +476,39 @@
       entityLayer.appendChild(group);
     }
 
-    function drawRelationship(fromName, toName, label) {
-      const from = center(entities[fromName]);
-      const to = center(entities[toName]);
-      const mx = (from.x + to.x) / 2;
+    function drawCardinality(point, value) {
+      const pos = cardinalityPosition(point, value);
+      const text = createSvgElement("text", {
+        x: pos.x,
+        y: pos.y,
+        class: "cardinality",
+        "text-anchor": pos.anchor
+      });
+      text.textContent = value;
+      relationshipLabelLayer.appendChild(text);
+    }
+
+    function drawRelationship(fromName, toName, label, options = {}) {
+      const from = anchor(entities[fromName], options.fromSide, options.fromOffset ?? 0);
+      const to = anchor(entities[toName], options.toSide, options.toOffset ?? 0);
+      const points = [from, ...(options.via ?? []).map(([x, y]) => ({ x, y })), to];
+      const pathData = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
       const path = createSvgElement("path", {
-        d: `M ${from.x} ${from.y} C ${mx} ${from.y}, ${mx} ${to.y}, ${to.x} ${to.y}`,
+        d: pathData,
         class: "relationship",
         "marker-start": "url(#dot)",
         "marker-end": "url(#dot)"
       });
-      relationshipLayer.appendChild(path);
+      const title = createSvgElement("title");
+      title.textContent = `${fromName} -> ${toName}: 1:n ${label}`;
+      path.appendChild(title);
+      relationshipLineLayer.appendChild(path);
 
-      const text = createSvgElement("text", {
-        x: mx + 8,
-        y: (from.y + to.y) / 2 - 8,
-        class: "relationship-label"
-      });
-      text.textContent = label;
-      relationshipLayer.appendChild(text);
+      drawCardinality(from, "1");
+      drawCardinality(to, "n");
     }
 
-    relationships.forEach(([from, to, label]) => drawRelationship(from, to, label));
+    relationships.forEach(([from, to, label, options]) => drawRelationship(from, to, label, options));
     Object.entries(entities).forEach(([name, entity]) => drawEntity(name, entity));
 
     let scale = 1;
@@ -509,11 +545,11 @@
     function fitToScreen() {
       const rect = canvasWrap.getBoundingClientRect();
       const padding = 6;
-      const scaleX = (rect.width - padding * 2) / 2200;
-      const scaleY = (rect.height - padding * 2) / 1860;
+      const scaleX = (rect.width - padding * 2) / 2600;
+      const scaleY = (rect.height - padding * 2) / 2200;
       scale = Math.max(0.28, Math.min(scaleX, scaleY));
-      panX = (rect.width - 2200 * scale) / 2;
-      panY = (rect.height - 1860 * scale) / 2;
+      panX = (rect.width - 2600 * scale) / 2;
+      panY = (rect.height - 2200 * scale) / 2;
       applyZoom();
     }
 
